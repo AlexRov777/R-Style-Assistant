@@ -4,7 +4,7 @@ import requests
 from urllib.parse import quote
 from datetime import datetime, timedelta
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CallbackQueryHandler
+from telegram.ext import CallbackQueryHandler, ContextTypes
 
 OPENWEATHER_API_KEY = '56bb63e80dffbf8c0927aee1f19a5711'  
 TELEGRAM_API_KEY = '8056144402:AAF4KYQ5QuD13vYOcgaJ-tfkgG7K1fuNwt0'  
@@ -48,7 +48,7 @@ face_form = {
     'ромбовидная': "Ромбовидная форма лица — о, как загадочно! Попробуйте стрижки с чёлкой или объёмом на уровне подбородка, удлинённое каре, чтобы очаровать всех вокруг!"
 }
 
-async def recommend_hairstyle(update: Update, context) -> None:
+async def recommend_hairstyle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [
         [InlineKeyboardButton("Круглая", callback_data='круглая')],
         [InlineKeyboardButton("Овальная", callback_data='овальная')],
@@ -56,17 +56,17 @@ async def recommend_hairstyle(update: Update, context) -> None:
         [InlineKeyboardButton("Треугольная", callback_data='треугольная')],
         [InlineKeyboardButton("Ромбовидная", callback_data='ромбовидная')]
     ]
-    reply_nacenka = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Выберите свою форму лица, дорогуша, и я мигом расскажу вам, как стать настоящей иконой стиля:", reply_nacenka=reply_nacenka)
+    reply_keyboard = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Выберите свою форму лица, дорогуша, и я мигом расскажу вам, как стать настоящей иконой стиля:", reply_markup=reply_keyboard)
 
-async def button(update: Update, context) -> None:
-    zapros = update.callback_query
-    await zapros.answer()
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()
     
-    forma_vibrannaya = zapros.data
-    recommendation = face_form.get(forma_vibrannaya, "Ах, кажется, я не знаю такой формы лица. Может, это какой-то скрытый шедевр?")
+    selected_shape = query.data
+    recommendation = face_form.get(selected_shape, "Ах, кажется, я не знаю такой формы лица. Может, это какой-то скрытый шедевр?")
     
-    await zapros.edit_message_text(text=f"Рекомендации для вашей прекрасной формы лица:\n{recommendation}")
+    await query.edit_message_text(text=f"Рекомендации для вашей прекрасной формы лица:\n{recommendation}")
 
 async def start(update: Update, context) -> None:
     await update.message.reply_text(
@@ -283,7 +283,9 @@ def main():
     application.add_handler(CommandHandler("care", care_sovet))  
     application.add_handler(CommandHandler("type", wearing_counter_method)) 
     application.add_handler(CommandHandler("counter", add_wearing_count))  
-    application.add_handler(CommandHandler("calendar", raspisanie_stirok))  
+    application.add_handler(CommandHandler("calendar", raspisanie_stirok)) 
+    
+ 
     application.run_polling()
 async def raspisanie_stirok(update: Update, context) -> None:
     today = datetime.today()
